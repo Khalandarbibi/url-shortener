@@ -1,6 +1,20 @@
 // Load environment variables
 require('dotenv').config();
 
+const path = require('path');
+const fs = require('fs');
+
+// Serve React build (if present)
+const buildPath = path.join(__dirname, '..', 'frontend', 'build');
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+  // any unknown route serve index.html (SPA)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+}
+
+
 // Import dependencies
 const express = require('express');
 const mongoose = require('mongoose');
@@ -46,7 +60,7 @@ function isValidHttpUrl(value) {
   }
 }
 
-// STEP 5 CODE (POST /api/shorten)
+
 app.post('/api/shorten', async (req, res) => {
   const { originalUrl } = req.body;
   if (!originalUrl) return res.status(400).json({ error: 'originalUrl is required' });
@@ -56,7 +70,7 @@ app.post('/api/shorten', async (req, res) => {
   }
 
   try {
-    // Check if URL already exists
+
     const existing = await Url.findOne({ originalUrl });
     if (existing) {
       return res.json({ shortUrl: `${BASE_URL}/${existing.shortCode}`, shortCode: existing.shortCode });
@@ -80,7 +94,7 @@ app.post('/api/shorten', async (req, res) => {
   }
 });
 
-// Redirect endpoint
+
 app.get('/:shortCode', async (req, res) => {
   const { shortCode } = req.params;
   try {
@@ -102,7 +116,6 @@ app.get('/:shortCode', async (req, res) => {
   }
 });
 
-// Admin endpoint
 app.get('/api/admin/urls', async (req, res) => {
   const token = req.header('x-admin-token') || '';
   if (process.env.ADMIN_TOKEN && token !== process.env.ADMIN_TOKEN) {
